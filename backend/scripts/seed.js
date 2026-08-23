@@ -126,11 +126,10 @@ async function main() {
 
   const obrasCreadas = [];
   for (const o of obras) {
-    const obra = await prisma.obra.upsert({
-      where: { id: o.nome }, // dummy — upsert por nome não funciona, usar create
-      update: {},
-      create: o,
-    }).catch(() => prisma.obra.create({ data: o }));
+    let obra = await prisma.obra.findFirst({ where: { nome: o.nome } });
+    if (!obra) {
+      obra = await prisma.obra.create({ data: o });
+    }
     obrasCreadas.push(obra);
     console.log(`✅ Obra: ${o.nome} (${o.pais})`);
   }
