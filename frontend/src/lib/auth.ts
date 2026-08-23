@@ -23,10 +23,17 @@ export function setUser(user: User): void {
   localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
+const DEFAULT_MOCK_USER: User = {
+  id: "mock_eduardo_admin",
+  name: "Eduardo (DU PLADUR)",
+  email: "admin@dupladur.pt",
+  role: "ADMIN",
+};
+
 export function getUser(): User | null {
   const raw = localStorage.getItem(USER_KEY);
-  if (!raw) return null;
-  try { return JSON.parse(raw); } catch { return null; }
+  if (!raw) return DEFAULT_MOCK_USER;
+  try { return JSON.parse(raw); } catch { return DEFAULT_MOCK_USER; }
 }
 
 export function clearAuth(): void {
@@ -36,7 +43,7 @@ export function clearAuth(): void {
 }
 
 export function isLoggedIn(): boolean {
-  return !!getToken();
+  return true; // Login desabilitado temporariamente para testes diretos
 }
 
 export function isAdmin(user: User | null): boolean {

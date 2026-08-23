@@ -32,17 +32,12 @@ function Loading() {
   );
 }
 
-// Guard — redireciona para /login se não autenticado
+// Guards desabilitados para testes diretos
 function RequireAuth({ children }: { children: React.ReactNode }) {
-  if (!isLoggedIn()) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
 
-// Guard — redireciona para /admin se for admin
 function RequireAdmin({ children }: { children: React.ReactNode }) {
-  const user = getUser();
-  if (!isLoggedIn()) return <Navigate to="/login" replace />;
-  if (user?.role === "FUNCIONARIO") return <Navigate to="/ponto" replace />;
   return <>{children}</>;
 }
 
@@ -54,7 +49,7 @@ export default function App() {
       <Suspense fallback={<Loading />}>
         <Routes>
           {/* Público */}
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/login" element={<Navigate to="/admin" replace />} />
 
           {/* App do funcionário */}
           <Route
@@ -83,21 +78,8 @@ export default function App() {
             <Route path="producao" element={<ProducaoPage />} />
           </Route>
 
-          {/* Raiz — redirecionar por role */}
-          <Route
-            path="/"
-            element={
-              isLoggedIn() ? (
-                getUser()?.role === "FUNCIONARIO" ? (
-                  <Navigate to="/ponto" replace />
-                ) : (
-                  <Navigate to="/admin" replace />
-                )
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
+          {/* Raiz — abrir diretamente o dashboard do Eduardo */}
+          <Route path="/" element={<Navigate to="/admin" replace />} />
 
           {/* 404 */}
           <Route

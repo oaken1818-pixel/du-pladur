@@ -4,7 +4,7 @@ const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
 const prisma = require("../config/prisma");
-const { authenticateToken, requireRole } = require("../middleware/auth");
+const { auth, roles } = require("../middleware/auth");
 
 // Configurar multer para upload de ficheiros
 const uploadsDir = path.join(__dirname, "../../uploads/documentos");
@@ -38,8 +38,8 @@ const upload = multer({
 // GET /api/documentos/expirando — Lista documentos a expirar nos próximos 30 dias (para alertas)
 router.get(
   "/expirando",
-  authenticateToken,
-  requireRole("ADMIN", "GESTOR", "CONTABILIDADE"),
+  auth,
+  roles("ADMIN", "GESTOR", "CONTABILIDADE"),
   async (_req, res) => {
     try {
       const em30dias = new Date();
@@ -70,7 +70,7 @@ router.get(
 );
 
 // GET /api/documentos/funcionario/:funcionarioId — Lista documentos de um funcionário
-router.get("/funcionario/:funcionarioId", authenticateToken, async (req, res) => {
+router.get("/funcionario/:funcionarioId", auth, async (req, res) => {
   try {
     const { funcionarioId } = req.params;
 
@@ -94,8 +94,8 @@ router.get("/funcionario/:funcionarioId", authenticateToken, async (req, res) =>
 // POST /api/documentos/funcionario/:funcionarioId — Upload de documento
 router.post(
   "/funcionario/:funcionarioId",
-  authenticateToken,
-  requireRole("ADMIN", "GESTOR"),
+  auth,
+  roles("ADMIN", "GESTOR"),
   upload.single("ficheiro"),
   async (req, res) => {
     try {
@@ -138,8 +138,8 @@ router.post(
 // DELETE /api/documentos/:id — Apagar documento
 router.delete(
   "/:id",
-  authenticateToken,
-  requireRole("ADMIN", "GESTOR"),
+  auth,
+  roles("ADMIN", "GESTOR"),
   async (req, res) => {
     try {
       const { id } = req.params;
