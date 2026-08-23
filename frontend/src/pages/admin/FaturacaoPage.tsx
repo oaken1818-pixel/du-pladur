@@ -26,6 +26,7 @@ import {
 import { formatEuro, formatDate } from "@/lib/auth";
 import ModalNovaFatura from "@/components/ModalNovaFatura";
 import AssistenteIAFinanceiro from "@/components/AssistenteIAFinanceiro";
+import ModalConfigFinancasAT from "@/components/ModalConfigFinancasAT";
 
 const STATUS_BADGE: Record<string, { label: string; color: string }> = {
   RASCUNHO: { label: "Rascunho", color: "badge-gray" },
@@ -48,6 +49,7 @@ export default function FaturacaoPage() {
 
   const [showNovaModal, setShowNovaModal] = useState(false);
   const [showIAModal, setShowIAModal] = useState(false);
+  const [showATModal, setShowATModal] = useState(false);
 
   async function carregar() {
     setLoading(true);
@@ -112,6 +114,13 @@ export default function FaturacaoPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            className="btn btn-ghost border border-blue-500/40 text-blue-400 hover:bg-blue-500/10 btn-md flex items-center gap-2"
+            onClick={() => setShowATModal(true)}
+            id="btn-config-at"
+          >
+            🏛️ Configuração AT Finanças
+          </button>
           <button
             className="btn btn-ghost border border-gold/40 text-gold hover:bg-yellow-500/10 btn-md flex items-center gap-2"
             onClick={() => setShowIAModal(true)}
@@ -349,6 +358,10 @@ export default function FaturacaoPage() {
           onClose={() => setShowIAModal(false)}
           onCreated={carregar}
         />
+      )}
+
+      {showATModal && (
+        <ModalConfigFinancasAT onClose={() => setShowATModal(false)} />
       )}
     </div>
   );

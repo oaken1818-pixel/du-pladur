@@ -194,6 +194,12 @@ export const faturacaoApi = {
 
   apagar: (id: string) =>
     request(`/api/faturacao/faturas/${id}`, { method: "DELETE" }),
+
+  getAtConfig: () =>
+    request<{ nifEmpresa: string; modoIntegracao: string; utilizadorWse: string }>("/api/at/config"),
+
+  saveAtConfig: (data: Record<string, string>) =>
+    request("/api/at/config", { method: "POST", body: JSON.stringify(data) }),
 };
 
 export const iaFinanceiraApi = {
