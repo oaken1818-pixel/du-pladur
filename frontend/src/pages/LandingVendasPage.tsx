@@ -104,16 +104,25 @@ export default function LandingVendasPage() {
             </div>
           </div>
 
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="btn btn-gold btn-md font-bold flex items-center gap-2 text-xs sm:text-sm"
-            id="btn-nav-whatsapp"
-          >
-            <MessageCircle size={17} />
-            Falar no WhatsApp
-          </a>
+          <div className="flex items-center gap-2">
+            <a
+              href="#/admin"
+              className="btn btn-ghost btn-md font-bold text-xs sm:text-sm text-gray-300 hover:text-white"
+              id="btn-nav-admin"
+            >
+              Entrar no SaaS
+            </a>
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="btn btn-gold btn-md font-bold flex items-center gap-2 text-xs sm:text-sm"
+              id="btn-nav-whatsapp"
+            >
+              <MessageCircle size={17} />
+              Falar no WhatsApp
+            </a>
+          </div>
         </div>
       </header>
 

@@ -54,6 +54,7 @@ export default function App() {
       <Suspense fallback={<Loading />}>
         <Routes>
           {/* Público */}
+          <Route path="/" element={<LandingVendasPage />} />
           <Route path="/vendas" element={<LandingVendasPage />} />
           <Route path="/login" element={<Navigate to="/admin" replace />} />
 
