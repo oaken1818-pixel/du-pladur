@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>OAKEN BUILD</title>
+    <script>
+      // Redirect GitHub Pages 404 to HashRouter URL
+      var l = window.location;
+      var path = l.pathname.slice(1);
+      var repo = path.split('/')[0];
+      var targetPath = path.split('/').slice(1).join('/');
+      window.location.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        '/' + repo + '/#/' + (targetPath || 'vendas') + l.search + l.hash
+      );
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

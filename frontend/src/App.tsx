@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import LoginPage from "@/pages/LoginPage";
 import { getUser, isLoggedIn } from "@/lib/auth";
@@ -49,10 +49,8 @@ function RequireAdmin({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const base = import.meta.env.BASE_URL;
-
   return (
-    <BrowserRouter basename={base}>
+    <HashRouter>
       <Suspense fallback={<Loading />}>
         <Routes>
           {/* Público */}
@@ -90,8 +88,8 @@ export default function App() {
             <Route path="producao" element={<ProducaoPage />} />
           </Route>
 
-          {/* Raiz — abrir diretamente o dashboard do Eduardo */}
-          <Route path="/" element={<Navigate to="/admin" replace />} />
+          {/* Raiz — abrir diretamente a landing de vendas ou o dashboard */}
+          <Route path="/" element={<Navigate to="/vendas" replace />} />
 
           {/* 404 */}
           <Route
@@ -103,14 +101,14 @@ export default function App() {
               >
                 <p className="text-6xl font-black text-gold">404</p>
                 <p style={{ color: "var(--gray-400)" }}>Página não encontrada.</p>
-                <a href="/" className="btn btn-ghost btn-md">
-                  Voltar ao início
+                <a href="#/vendas" className="btn btn-ghost btn-md">
+                  Voltar às Vendas
                 </a>
               </div>
             }
           />
         </Routes>
       </Suspense>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
