@@ -78,7 +78,7 @@ export default function LandingVendasPage() {
   ];
 
   return (
-    <div className="min-h-dvh text-gray-100" style={{ background: "#060608", fontFamily: "Inter, sans-serif" }}>
+    <div className="min-h-dvh text-gray-100 w-full overflow-x-hidden" style={{ background: "#060608", fontFamily: "Inter, sans-serif" }}>
       {/* ── BARRA DE AVISO SUPERIOR ── */}
       <div
         className="py-2.5 px-4 text-center font-semibold text-xs text-black flex items-center justify-center gap-2"

@@ -130,8 +130,7 @@ export default function AdminLayout() {
 
       {/* ── Conteúdo principal ── */}
       <main
-        className="flex-1 min-w-0"
-        style={{ marginLeft: "260px" }}
+        className="flex-1 min-w-0 lg:ml-[260px] ml-0 transition-all"
         id="admin-main"
       >
         {/* Header mobile */}
@@ -158,7 +157,7 @@ export default function AdminLayout() {
         </div>
 
         {/* Página */}
-        <div className="p-6">
+        <div className="p-3 sm:p-6 min-w-0 overflow-x-hidden">
           <Outlet />
         </div>
       </main>
