@@ -58,6 +58,8 @@ app.use("/api/ia-financeira", require("./routes/ia_financeira"));
 app.use("/api/at", require("./routes/at_financas"));
 app.use("/api/rh", require("./routes/rh_payroll"));
 app.use("/api/calculadora", require("./routes/calculadora"));
+app.use("/api/fotos-obra", require("./routes/fotos_obra"));
+app.use("/api/cronograma", require("./routes/cronograma"));
 
 // ─── Health check ─────────────────────────────────────────────────────────
 

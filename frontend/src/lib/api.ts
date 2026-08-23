@@ -231,6 +231,11 @@ export const calculadoraApi = {
     }),
 };
 
+export const cronogramaApi = {
+  getCronograma: (obraId: string) =>
+    request<CronogramaData>(`/api/cronograma/${obraId}`),
+};
+
 export const iaFinanceiraApi = {
   processarPrompt: (prompt: string, obraId?: string) =>
     request<IASugestaoFatura>("/api/ia-financeira/processar", {
@@ -529,6 +534,21 @@ export interface ResultadoCalculo {
   titulo: string;
   areaM2: number;
   itens: { material: string; quantidade: number; unidade: string; nota: string }[];
+}
+
+export interface TarefaCronograma {
+  id: string;
+  nome: string;
+  duracaoDias: number;
+  dependenteDe: string | null;
+  noCaminhoCritico: boolean;
+  progressoPct: number;
+}
+
+export interface CronogramaData {
+  obraId: string;
+  duracaoTotalCaminhoCriticoDias: number;
+  tarefas: TarefaCronograma[];
 }
 
 export { ApiError };

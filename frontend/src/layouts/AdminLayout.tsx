@@ -20,6 +20,7 @@ import { getUser, clearAuth } from "@/lib/auth";
 const NAV_ITEMS = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/admin/calculadora", label: "Calculadora de Materiais", icon: Calculator },
+  { to: "/admin/cronograma", label: "Cronograma & Visão IA", icon: CalendarDays },
   { to: "/admin/faturacao", label: "Faturação & Medição", icon: FileText },
   { to: "/admin/rh", label: "RH & Salários (€/h)", icon: Users },
   { to: "/admin/funcionarios", label: "Funcionários", icon: Users },
