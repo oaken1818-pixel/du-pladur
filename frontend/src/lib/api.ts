@@ -165,6 +165,45 @@ export const documentosApi = {
     request(`/api/documentos/${id}`, { method: "DELETE" }),
 };
 
+// ─── Faturação, Autos de Medição & IA Financeira ──────────────────────────
+
+export const faturacaoApi = {
+  stats: () => request<FaturacaoStats>("/api/faturacao/stats"),
+
+  listarClientes: () => request<Cliente[]>("/api/faturacao/clientes"),
+  criarCliente: (data: Partial<Cliente>) =>
+    request<Cliente>("/api/faturacao/clientes", { method: "POST", body: JSON.stringify(data) }),
+
+  listarFaturas: (params?: Record<string, string>) => {
+    const qs = new URLSearchParams(params).toString();
+    return request<Fatura[]>(`/api/faturacao/faturas${qs ? `?${qs}` : ""}`);
+  },
+
+  criarFatura: (data: {
+    obraId?: string;
+    clienteId?: string;
+    tipo?: "AUTO_MEDICAO" | "PRO_FORMA" | "FATURA";
+    retencaoGarantiaPct?: number;
+    dataVencimento?: string;
+    notas?: string;
+    itens: { descricao: string; quantidade: number; unidade?: string; precoUnitario: number }[];
+  }) => request<Fatura>("/api/faturacao/faturas", { method: "POST", body: JSON.stringify(data) }),
+
+  marcarPaga: (id: string) =>
+    request<Fatura>(`/api/faturacao/faturas/${id}/pagar`, { method: "PATCH" }),
+
+  apagar: (id: string) =>
+    request(`/api/faturacao/faturas/${id}`, { method: "DELETE" }),
+};
+
+export const iaFinanceiraApi = {
+  processarPrompt: (prompt: string, obraId?: string) =>
+    request<IASugestaoFatura>("/api/ia-financeira/processar", {
+      method: "POST",
+      body: JSON.stringify({ prompt, obraId }),
+    }),
+};
+
 // ─── Tipos ────────────────────────────────────────────────────────────────
 
 export interface DocumentoFuncionario {
@@ -345,6 +384,80 @@ export interface DashboardData {
     presentesHoje: number;
     producaoHoje: number;
   }[];
+}
+
+export interface FaturacaoStats {
+  totalFaturadoMes: number;
+  totalPendentes: number;
+  totalVencidas: number;
+  totalPagas: number;
+  qtdFaturasMes: number;
+  qtdVencidas: number;
+}
+
+export interface Cliente {
+  id: string;
+  nome: string;
+  nif?: string;
+  email?: string;
+  morada?: string;
+  cidade?: string;
+  pais: string;
+  telefone?: string;
+  _count?: { faturas: number };
+}
+
+export interface ItemFatura {
+  id?: string;
+  descricao: string;
+  quantidade: number;
+  unidade: string;
+  precoUnitario: number;
+  subtotal: number;
+}
+
+export interface Fatura {
+  id: string;
+  numero: string;
+  tipo: "AUTO_MEDICAO" | "PRO_FORMA" | "FATURA";
+  status: "RASCUNHO" | "EMITIDA" | "PAGA" | "CANCELADA";
+  obraId?: string;
+  obra?: { id: string; nome: string; cidade: string; pais: string };
+  clienteId?: string;
+  cliente?: { id: string; nome: string; nif?: string };
+  valorSemIva: number;
+  taxaIva: number;
+  motivoIsencaoIva?: string;
+  retencaoGarantiaPct?: number;
+  valorRetido?: number;
+  valorTotal: number;
+  dataEmissao: string;
+  dataVencimento: string;
+  dataPagamento?: string;
+  pdfUrl?: string;
+  notas?: string;
+  itens: ItemFatura[];
+}
+
+export interface IASugestaoFatura {
+  tipo: "AUTO_MEDICAO" | "PRO_FORMA" | "FATURA";
+  obraId?: string;
+  obraNome?: string;
+  clienteNome?: string;
+  item: {
+    descricao: string;
+    quantidade: number;
+    unidade: string;
+    precoUnitario: number;
+    subtotal: number;
+  };
+  retencaoGarantiaPct: number;
+  taxaIva: number;
+  motivoIsencaoIva: string;
+  valorSemIva: number;
+  valorRetido: number;
+  valorTotal: number;
+  mensagemIA: string;
 }
 
 export { ApiError };

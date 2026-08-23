@@ -7,6 +7,7 @@ import { getUser, isLoggedIn } from "@/lib/auth";
 // Admin (lazy)
 const AdminLayout = lazy(() => import("@/layouts/AdminLayout"));
 const DashboardPage = lazy(() => import("@/pages/admin/DashboardPage"));
+const FaturacaoPage = lazy(() => import("@/pages/admin/FaturacaoPage"));
 const FuncionariosPage = lazy(() => import("@/pages/admin/FuncionariosPage"));
 const ObrasPage = lazy(() => import("@/pages/admin/ObrasPage"));
 const EscalaPage = lazy(() => import("@/pages/admin/EscalaPage"));
@@ -42,7 +43,7 @@ function RequireAdmin({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const base = import.meta.env.PROD ? "/du-pladur" : "/";
+  const base = import.meta.env.BASE_URL;
 
   return (
     <BrowserRouter basename={base}>
@@ -71,6 +72,7 @@ export default function App() {
             }
           >
             <Route index element={<DashboardPage />} />
+            <Route path="faturacao" element={<FaturacaoPage />} />
             <Route path="funcionarios" element={<FuncionariosPage />} />
             <Route path="obras" element={<ObrasPage />} />
             <Route path="escala" element={<EscalaPage />} />

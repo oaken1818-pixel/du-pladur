@@ -53,6 +53,8 @@ app.use("/api/ponto", require("./routes/ponto"));
 app.use("/api/escala", require("./routes/escala"));
 app.use("/api/dashboard", require("./routes/dashboard"));
 app.use("/api/documentos", require("./routes/documentos"));
+app.use("/api/faturacao", require("./routes/faturacao"));
+app.use("/api/ia-financeira", require("./routes/ia_financeira"));
 
 // ─── Health check ─────────────────────────────────────────────────────────
 

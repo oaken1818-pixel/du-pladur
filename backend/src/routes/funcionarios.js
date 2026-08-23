@@ -20,8 +20,8 @@ router.get("/", roles("ADMIN", "GESTOR", "ENCARREGADO"), async (req, res) => {
   if (q) {
     where.user = {
       OR: [
-        { name: { contains: q, mode: "insensitive" } },
-        { email: { contains: q, mode: "insensitive" } },
+        { name: { contains: q } },
+        { email: { contains: q } },
       ],
     };
   }

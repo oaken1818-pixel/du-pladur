@@ -1,0 +1,339 @@
+// DU PLADUR — Schema SQLite para Desenvolvimento Local Instantâneo
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("FUNCIONARIO") // ADMIN, GESTOR, ENCARREGADO, FUNCIONARIO
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  funcionario  Funcionario?
+  refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Funcionario {
+  id              String            @id @default(uuid())
+  userId          String            @unique
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  nif             String?           @unique
+  dataNascimento  DateTime?
+  telefone        String?
+  morada          String?
+  pais            String            @default("PT")
+
+  cargo           String
+  salario         Decimal?
+  tipoContrato    String            @default("EFETIVO")
+  jornadaSemanal  Int               @default(40)
+  dataContratacao DateTime
+  status          String            @default("ATIVO")
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  pontos          Ponto[]
+  escalas         Escala[]
+  obrasAtribuidas ObraFuncionario[]
+  producoes       RegistoProducao[]
+  documentos      DocumentoFuncionario[]
+}
+
+model DocumentoFuncionario {
+  id            String        @id @default(uuid())
+  funcionarioId String
+  funcionario   Funcionario   @relation(fields: [funcionarioId], references: [id], onDelete: Cascade)
+
+  tipo          String        @default("CURSO_CERTIFICACAO")
+  titulo        String
+  descricao     String?
+  ficheiroUrl   String
+  nomeFicheiro  String
+  tamanhoBytes  Int?
+
+  dataEmissao   DateTime?
+  dataValidade  DateTime?
+
+  criadoPor     String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([funcionarioId])
+}
+
+model Obra {
+  id            String     @id @default(uuid())
+  nome          String
+  cliente       String?
+  descricao     String?
+
+  morada        String?
+  cidade        String?
+  pais          String     @default("PT")
+  codigoPais    String     @default("PT")
+
+  latitude      Float?
+  longitude     Float?
+  geofenceRaio  Int        @default(200)
+
+  dataInicio    DateTime
+  dataFimPrevista DateTime?
+  dataFimReal   DateTime?
+
+  orcamento     Decimal?
+  status        String     @default("ATIVA")
+
+  responsavelId String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  funcionarios  ObraFuncionario[]
+  pontos        Ponto[]
+  escalas       Escala[]
+  producoes     RegistoProducao[]
+  movimentos    MovimentoMaterial[]
+  solicitacoes  SolicitacaoMaterial[]
+  ocorrencias   Ocorrencia[]
+  despesas      Despesa[]
+  faturas       Fatura[]
+}
+
+model ObraFuncionario {
+  id            String      @id @default(uuid())
+  obraId        String
+  obra          Obra        @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  funcionarioId String
+  funcionario   Funcionario @relation(fields: [funcionarioId], references: [id], onDelete: Cascade)
+  dataInicio    DateTime    @default(now())
+  dataFim       DateTime?
+  ativo         Boolean     @default(true)
+
+  @@unique([obraId, funcionarioId])
+}
+
+model Ponto {
+  id            String      @id @default(uuid())
+  funcionarioId String
+  funcionario   Funcionario @relation(fields: [funcionarioId], references: [id])
+  obraId        String
+  obra          Obra        @relation(fields: [obraId], references: [id])
+
+  tipo          String
+  status        String      @default("PENDENTE")
+
+  latitude      Float?
+  longitude     Float?
+  distanciaObra Float?
+
+  dispositivo   String?
+  ipAddress     String?
+
+  registadoOffline Boolean @default(false)
+  sincronizadoEm   DateTime?
+
+  registadoEm   DateTime
+  createdAt     DateTime   @default(now())
+
+  corrigidoPor  String?
+  notaAdmin     String?
+
+  @@index([funcionarioId, registadoEm])
+}
+
+model Escala {
+  id            String       @id @default(uuid())
+  funcionarioId String
+  funcionario   Funcionario  @relation(fields: [funcionarioId], references: [id])
+  obraId        String
+  obra          Obra         @relation(fields: [obraId], references: [id])
+
+  data          DateTime
+  horaEntrada   String       @default("08:00")
+  horaSaida     String       @default("17:00")
+  status        String       @default("PLANEADA")
+  nota          String?
+
+  criadoPor     String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@unique([funcionarioId, data, obraId])
+}
+
+model RegistoProducao {
+  id            String      @id @default(uuid())
+  funcionarioId String
+  funcionario   Funcionario @relation(fields: [funcionarioId], references: [id])
+  obraId        String
+  obra          Obra        @relation(fields: [obraId], references: [id])
+
+  data          DateTime
+  tipoProduto   String
+  quantidade    Decimal
+  unidade       String      @default("m²")
+  nota          String?
+
+  registadoPor  String?
+  createdAt     DateTime    @default(now())
+}
+
+model Material {
+  id          String  @id @default(uuid())
+  nome        String
+  unidade     String  @default("un")
+  descricao   String?
+  ativo       Boolean @default(true)
+
+  movimentos  MovimentoMaterial[]
+  solicitacoes SolicitacaoMaterial[]
+}
+
+model MovimentoMaterial {
+  id         String   @id @default(uuid())
+  obraId     String
+  obra       Obra     @relation(fields: [obraId], references: [id])
+  materialId String
+  material   Material @relation(fields: [materialId], references: [id])
+
+  tipo       String
+  quantidade Decimal
+  nota       String?
+
+  registadoPor String?
+  createdAt    DateTime @default(now())
+}
+
+model SolicitacaoMaterial {
+  id          String            @id @default(uuid())
+  obraId      String
+  obra        Obra              @relation(fields: [obraId], references: [id])
+  materialId  String
+  material    Material          @relation(fields: [materialId], references: [id])
+
+  quantidade  Decimal
+  nota        String?
+  status      String            @default("PENDENTE")
+  quantidadeAprovada Decimal?
+  notaAdmin   String?
+
+  solicitadoPor String?
+  aprovadoPor   String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model Ocorrencia {
+  id          String              @id @default(uuid())
+  obraId      String
+  obra        Obra                @relation(fields: [obraId], references: [id])
+  categoria   String              @default("OUTRO")
+  descricao   String
+  resolvida   Boolean             @default(false)
+  registadoPor String?
+  createdAt   DateTime            @default(now())
+}
+
+model Despesa {
+  id          String   @id @default(uuid())
+  obraId      String
+  obra        Obra     @relation(fields: [obraId], references: [id])
+  tipo        String
+  valor       Decimal
+  descricao   String?
+  data        DateTime
+  aprovada    Boolean  @default(false)
+  aprovadaPor String?
+  registadaPor String?
+  createdAt   DateTime @default(now())
+}
+
+// ─── FATURAÇÃO & AUTOS DE MEDIÇÃO ──────────────────────────────────────────
+
+model Cliente {
+  id          String   @id @default(uuid())
+  nome        String
+  nif         String?  @unique
+  email       String?
+  morada      String?
+  cidade      String?
+  pais        String   @default("PT")
+  codigoPais  String   @default("PT")
+  telefone    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  faturas     Fatura[]
+}
+
+model Fatura {
+  id                    String       @id @default(uuid())
+  numero                String       @unique // Ex: "FT 2026/001" ou "AM 2026/001"
+  tipo                  String       @default("AUTO_MEDICAO") // AUTO_MEDICAO, PRO_FORMA, FATURA
+  status                String       @default("EMITIDA") // RASCUNHO, EMITIDA, PAGA, CANCELADA
+
+  obraId                String?
+  obra                  Obra?        @relation(fields: [obraId], references: [id])
+
+  clienteId             String?
+  cliente               Cliente?     @relation(fields: [clienteId], references: [id])
+
+  valorSemIva           Decimal
+  taxaIva               Decimal      @default(0) // 0% em Inversão de Sujeito Passivo
+  motivoIsencaoIva      String?      @default("IVA - Inversão do sujeito passivo [Artigo 2.º n.º 1 al. j) do CIVA]")
+  retencaoGarantiaPct   Decimal?     @default(5) // Retenção de garantia (ex: 5%)
+  valorRetido           Decimal?     @default(0)
+  valorTotal            Decimal
+
+  dataEmissao           DateTime     @default(now())
+  dataVencimento        DateTime
+  dataPagamento         DateTime?
+
+  pdfUrl                String?
+  referenciaApi         String?      // ID da fatura no InvoiceXpress/Moloni/TOConline
+  notas                 String?
+
+  criadoPor             String?      // userId
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  itens                 ItemFatura[]
+
+  @@index([obraId])
+  @@index([status])
+}
+
+model ItemFatura {
+  id            String   @id @default(uuid())
+  faturaId      String
+  fatura        Fatura   @relation(fields: [faturaId], references: [id], onDelete: Cascade)
+
+  descricao     String   // Ex: "Montagem de divisórias de Pladur Nível 2"
+  quantidade    Decimal
+  unidade       String   @default("m²") // "m²", "ml", "un", "h"
+  precoUnitario Decimal
+  subtotal      Decimal
+
+  createdAt     DateTime @default(now())
+}
+

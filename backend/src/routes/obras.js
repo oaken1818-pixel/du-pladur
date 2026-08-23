@@ -13,7 +13,7 @@ router.get("/", roles("ADMIN", "GESTOR", "ENCARREGADO"), async (req, res) => {
   const where = {};
   if (status) where.status = status;
   if (pais) where.pais = pais;
-  if (q) where.nome = { contains: q, mode: "insensitive" };
+  if (q) where.nome = { contains: q };
 
   const obras = await prisma.obra.findMany({
     where,
