@@ -19,6 +19,7 @@ import { getUser, clearAuth } from "@/lib/auth";
 const NAV_ITEMS = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/admin/faturacao", label: "Faturação & Medição", icon: FileText },
+  { to: "/admin/rh", label: "RH & Salários (€/h)", icon: Users },
   { to: "/admin/funcionarios", label: "Funcionários", icon: Users },
   { to: "/admin/obras", label: "Obras", icon: HardHat },
   { to: "/admin/escala", label: "Escala", icon: CalendarDays },

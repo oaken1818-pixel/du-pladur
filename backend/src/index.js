@@ -56,6 +56,7 @@ app.use("/api/documentos", require("./routes/documentos"));
 app.use("/api/faturacao", require("./routes/faturacao"));
 app.use("/api/ia-financeira", require("./routes/ia_financeira"));
 app.use("/api/at", require("./routes/at_financas"));
+app.use("/api/rh", require("./routes/rh_payroll"));
 
 // ─── Health check ─────────────────────────────────────────────────────────
 

@@ -125,6 +125,7 @@ model Funcionario {
   // Dados profissionais
   cargo           String
   salario         Decimal?          @db.Decimal(10, 2)
+  salarioHora     Decimal?          @db.Decimal(10, 2) // Valor do salário por hora (€/h)
   tipoContrato    TipoContrato      @default(EFETIVO)
   jornadaSemanal  Int               @default(40) // horas por semana
   dataContratacao DateTime

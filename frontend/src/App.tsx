@@ -8,6 +8,7 @@ import { getUser, isLoggedIn } from "@/lib/auth";
 const AdminLayout = lazy(() => import("@/layouts/AdminLayout"));
 const DashboardPage = lazy(() => import("@/pages/admin/DashboardPage"));
 const FaturacaoPage = lazy(() => import("@/pages/admin/FaturacaoPage"));
+const RHPage = lazy(() => import("@/pages/admin/RHPage"));
 const FuncionariosPage = lazy(() => import("@/pages/admin/FuncionariosPage"));
 const ObrasPage = lazy(() => import("@/pages/admin/ObrasPage"));
 const EscalaPage = lazy(() => import("@/pages/admin/EscalaPage"));
@@ -73,6 +74,7 @@ export default function App() {
           >
             <Route index element={<DashboardPage />} />
             <Route path="faturacao" element={<FaturacaoPage />} />
+            <Route path="rh" element={<RHPage />} />
             <Route path="funcionarios" element={<FuncionariosPage />} />
             <Route path="obras" element={<ObrasPage />} />
             <Route path="escala" element={<EscalaPage />} />

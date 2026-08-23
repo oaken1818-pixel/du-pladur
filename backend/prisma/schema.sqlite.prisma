@@ -45,6 +45,7 @@ model Funcionario {
 
   cargo           String
   salario         Decimal?
+  salarioHora     Decimal?          // Valor do salário por hora (€/h)
   tipoContrato    String            @default("EFETIVO")
   jornadaSemanal  Int               @default(40)
   dataContratacao DateTime

@@ -202,6 +202,27 @@ export const faturacaoApi = {
     request("/api/at/config", { method: "POST", body: JSON.stringify(data) }),
 };
 
+export const rhApi = {
+  getFolhaPagamento: (mes?: number, ano?: number) => {
+    const qs = new URLSearchParams();
+    if (mes) qs.append("mes", String(mes));
+    if (ano) qs.append("ano", String(ano));
+    return request<FolhaPagamentoData>(`/api/rh/folha-pagamento${qs.toString() ? `?${qs.toString()}` : ""}`);
+  },
+
+  updateSalarioHora: (funcionarioId: string, salarioHora: number) =>
+    request(`/api/rh/funcionario/${funcionarioId}/salario-hora`, {
+      method: "PATCH",
+      body: JSON.stringify({ salarioHora }),
+    }),
+
+  processarFolhaIA: (mes?: number, ano?: number) =>
+    request<IAResumoFolha>("/api/rh/ia-processar-folha", {
+      method: "POST",
+      body: JSON.stringify({ mes, ano }),
+    }),
+};
+
 export const iaFinanceiraApi = {
   processarPrompt: (prompt: string, obraId?: string) =>
     request<IASugestaoFatura>("/api/ia-financeira/processar", {
@@ -464,6 +485,35 @@ export interface IASugestaoFatura {
   valorRetido: number;
   valorTotal: number;
   mensagemIA: string;
+}
+
+export interface TrabalhadorFolha {
+  funcionarioId: string;
+  nome: string;
+  cargo: string;
+  pais: string;
+  obras: string;
+  salarioHora: number;
+  horasTrabalhadas: number;
+  horasNormais: number;
+  horasExtra: number;
+  valorHorasNormais: number;
+  valorHorasExtra: number;
+  totalAPagar: number;
+}
+
+export interface FolhaPagamentoData {
+  mes: number;
+  ano: number;
+  totalTrabalhadores: number;
+  totalFolhaMes: number;
+  totalHorasGerais: number;
+  trabalhadores: TrabalhadorFolha[];
+}
+
+export interface IAResumoFolha {
+  mensagemIA: string;
+  sugestaoAcoes: string[];
 }
 
 export { ApiError };
