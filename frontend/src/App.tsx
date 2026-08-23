@@ -7,6 +7,7 @@ import { getUser, isLoggedIn } from "@/lib/auth";
 // Admin (lazy)
 const AdminLayout = lazy(() => import("@/layouts/AdminLayout"));
 const DashboardPage = lazy(() => import("@/pages/admin/DashboardPage"));
+const CalculadoraMateriaisPage = lazy(() => import("@/pages/admin/CalculadoraMateriaisPage"));
 const FaturacaoPage = lazy(() => import("@/pages/admin/FaturacaoPage"));
 const RHPage = lazy(() => import("@/pages/admin/RHPage"));
 const FuncionariosPage = lazy(() => import("@/pages/admin/FuncionariosPage"));
@@ -73,6 +74,7 @@ export default function App() {
             }
           >
             <Route index element={<DashboardPage />} />
+            <Route path="calculadora" element={<CalculadoraMateriaisPage />} />
             <Route path="faturacao" element={<FaturacaoPage />} />
             <Route path="rh" element={<RHPage />} />
             <Route path="funcionarios" element={<FuncionariosPage />} />

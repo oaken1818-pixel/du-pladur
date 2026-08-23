@@ -223,6 +223,14 @@ export const rhApi = {
     }),
 };
 
+export const calculadoraApi = {
+  calcular: (data: { especialidade: string; areaM2?: number; demasPintura?: number }) =>
+    request<ResultadoCalculo>("/api/calculadora/calcular", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+};
+
 export const iaFinanceiraApi = {
   processarPrompt: (prompt: string, obraId?: string) =>
     request<IASugestaoFatura>("/api/ia-financeira/processar", {
@@ -514,6 +522,13 @@ export interface FolhaPagamentoData {
 export interface IAResumoFolha {
   mensagemIA: string;
   sugestaoAcoes: string[];
+}
+
+export interface ResultadoCalculo {
+  especialidade: string;
+  titulo: string;
+  areaM2: number;
+  itens: { material: string; quantidade: number; unidade: string; nota: string }[];
 }
 
 export { ApiError };

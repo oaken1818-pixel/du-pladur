@@ -8,6 +8,7 @@ import {
   CalendarDays,
   BarChart3,
   FileText,
+  Calculator,
   Menu,
   X,
   LogOut,
@@ -18,6 +19,7 @@ import { getUser, clearAuth } from "@/lib/auth";
 
 const NAV_ITEMS = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/admin/calculadora", label: "Calculadora de Materiais", icon: Calculator },
   { to: "/admin/faturacao", label: "Faturação & Medição", icon: FileText },
   { to: "/admin/rh", label: "RH & Salários (€/h)", icon: Users },
   { to: "/admin/funcionarios", label: "Funcionários", icon: Users },
@@ -68,9 +70,9 @@ export default function AdminLayout() {
             <Hammer size={18} color="#000" strokeWidth={2.5} />
           </div>
           <div>
-            <p className="font-bold text-white text-sm leading-tight">DU PLADUR</p>
+            <p className="font-bold text-white text-sm leading-tight">OAKEN BUILD</p>
             <p className="text-xs" style={{ color: "var(--gray-500)" }}>
-              Gestão de Obras
+              SaaS de Gestão de Obras
             </p>
           </div>
         </div>
@@ -150,7 +152,7 @@ export default function AdminLayout() {
           </button>
           <div className="flex items-center gap-2">
             <Hammer size={16} style={{ color: "var(--gold-500)" }} />
-            <span className="font-bold text-white text-sm">DU PLADUR</span>
+            <span className="font-bold text-white text-sm">OAKEN BUILD</span>
           </div>
         </div>
 
