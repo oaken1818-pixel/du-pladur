@@ -4,6 +4,9 @@ import { Loader2 } from "lucide-react";
 import LoginPage from "@/pages/LoginPage";
 import { getUser, isLoggedIn } from "@/lib/auth";
 
+// Landing Page de Vendas (lazy)
+const LandingVendasPage = lazy(() => import("@/pages/LandingVendasPage"));
+
 // Admin (lazy)
 const AdminLayout = lazy(() => import("@/layouts/AdminLayout"));
 const DashboardPage = lazy(() => import("@/pages/admin/DashboardPage"));
@@ -53,6 +56,7 @@ export default function App() {
       <Suspense fallback={<Loading />}>
         <Routes>
           {/* Público */}
+          <Route path="/vendas" element={<LandingVendasPage />} />
           <Route path="/login" element={<Navigate to="/admin" replace />} />
 
           {/* App do funcionário */}
