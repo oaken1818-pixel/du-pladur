@@ -10,12 +10,19 @@ const app = express();
 
 app.use(helmet());
 
-const origins = (process.env.ALLOWED_ORIGINS || "http://localhost:5173").split(",");
+const origins = (process.env.ALLOWED_ORIGINS || "http://localhost:5173,http://localhost:5174,http://localhost:5175").split(",");
 app.use(
   cors({
     origin: (origin, cb) => {
-      // Permitir requests sem origin (ex: Postman, mobile)
-      if (!origin || origins.includes(origin)) return cb(null, true);
+      // Permitir requests sem origin (ex: Postman) ou qualquer localhost / github.io
+      if (
+        !origin ||
+        origins.includes(origin) ||
+        origin.startsWith("http://localhost:") ||
+        origin.endsWith(".github.io")
+      ) {
+        return cb(null, true);
+      }
       cb(new Error(`CORS: origem ${origin} não permitida.`));
     },
     credentials: true,
