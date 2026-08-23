@@ -1,0 +1,396 @@
+// DU PLADUR — Schema da Base de Dados
+// Sistema de Gestão Operacional para Empresas de Construção
+// Empresa sediada em Portugal, obras em vários países (PT, ES, FR, ...)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── ENUMS ─────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN         // Eduardo — acesso total
+  GESTOR        // Gestor de obras — vê múltiplas obras
+  ENCARREGADO   // Encarregado — vê só a sua obra
+  FUNCIONARIO   // Trabalhador — só ponto + escala + info própria
+  CONTABILIDADE // Só relatórios e horas
+}
+
+enum FuncionarioStatus {
+  ATIVO
+  INATIVO
+  FERIAS
+  LICENCA
+  SUSPENDIDO
+}
+
+enum TipoContrato {
+  EFETIVO
+  PRAZO_CERTO
+  TEMPORARIO
+  ESTAGIO
+  OUTRO
+}
+
+enum ObraStatus {
+  ATIVA
+  PAUSADA
+  CONCLUIDA
+  CANCELADA
+}
+
+enum PontoTipo {
+  ENTRADA
+  SAIDA
+  PAUSA_INICIO
+  PAUSA_FIM
+}
+
+enum PontoStatus {
+  PENDENTE      // Aguarda revisão admin
+  SINCRONIZADO  // Registado com GPS válido
+  OFFLINE       // Registado sem internet, sincronizado depois
+  MANUAL        // Adicionado/corrigido manualmente por admin
+  FORA_AREA     // GPS fora do geofence da obra
+}
+
+enum EscalaStatus {
+  PLANEADA
+  CONFIRMADA
+  CANCELADA
+}
+
+enum SolicitacaoStatus {
+  PENDENTE
+  APROVADA
+  RECUSADA
+  ALTERADA
+}
+
+enum OcorrenciaCategoria {
+  SEGURANCA
+  MATERIAL
+  EQUIPAMENTO
+  CLIENTE
+  ATRASO
+  OUTRO
+}
+
+// ─── AUTENTICAÇÃO ──────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         UserRole @default(FUNCIONARIO)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relação com a ficha do funcionário (1:1 opcional — admin pode não ter ficha)
+  funcionario  Funcionario?
+
+  refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+// ─── FUNCIONÁRIOS ──────────────────────────────────────────────────────────
+
+model Funcionario {
+  id              String            @id @default(uuid())
+  userId          String            @unique
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Dados pessoais
+  nif             String?           @unique // NIF/Contribuinte
+  dataNascimento  DateTime?
+  telefone        String?
+  morada          String?
+  pais            String            @default("PT") // País de residência
+
+  // Dados profissionais
+  cargo           String
+  salario         Decimal?          @db.Decimal(10, 2)
+  tipoContrato    TipoContrato      @default(EFETIVO)
+  jornadaSemanal  Int               @default(40) // horas por semana
+  dataContratacao DateTime
+  status          FuncionarioStatus @default(ATIVO)
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  // Relações
+  pontos          Ponto[]
+  escalas         Escala[]
+  obrasAtribuidas ObraFuncionario[]
+  producoes       RegistoProducao[]
+  documentos      DocumentoFuncionario[]
+}
+
+// ─── DOCUMENTOS DE FUNCIONÁRIOS ────────────────────────────────────────────
+
+enum DocumentoTipo {
+  CURSO_CERTIFICACAO  // Cursos de formação, certificados de pladur, operador de máquinas, etc.
+  IDENTIFICACAO       // Cartão Cidadão, Passaporte, Titulo de Residência, NIF
+  CONTRATO            // Contrato de trabalho, adendas
+  SEGURANCA_TRABALHO  // EPI, Ficha de Aptidão, Exame Médico
+  HABILITACAO_CONDUZIR// Carta de condução, CAM
+  OUTRO
+}
+
+model DocumentoFuncionario {
+  id            String        @id @default(uuid())
+  funcionarioId String
+  funcionario   Funcionario   @relation(fields: [funcionarioId], references: [id], onDelete: Cascade)
+
+  tipo          DocumentoTipo @default(CURSO_CERTIFICACAO)
+  titulo        String        // Ex: "Curso de Montador de Pladur Nível 2"
+  descricao     String?
+  ficheiroUrl   String        // Caminho ou URL do ficheiro
+  nomeFicheiro  String        // Ex: "certificado_pladur.pdf"
+  tamanhoBytes  Int?
+
+  dataEmissao   DateTime?
+  dataValidade  DateTime?     // Data de expiração para alertas (ex: cursos ou médico)
+
+  criadoPor     String?       // userId de quem fez upload
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([funcionarioId])
+  @@index([dataValidade])
+}
+
+// ─── OBRAS ─────────────────────────────────────────────────────────────────
+
+model Obra {
+  id            String     @id @default(uuid())
+  nome          String
+  cliente       String?
+  descricao     String?
+
+  // Localização — suporte multi-país
+  morada        String?
+  cidade        String?
+  pais          String     @default("PT") // PT, ES, FR, DE, ...
+  codigoPais    String     @default("PT") // ISO 3166-1 alpha-2
+
+  // Geofence para validação de ponto
+  latitude      Float?
+  longitude     Float?
+  geofenceRaio  Int        @default(200) // metros
+
+  // Datas
+  dataInicio    DateTime
+  dataFimPrevista DateTime?
+  dataFimReal   DateTime?
+
+  // Financeiro
+  orcamento     Decimal?   @db.Decimal(12, 2)
+  status        ObraStatus @default(ATIVA)
+
+  // Responsável pela obra
+  responsavelId String?
+  // (referência ao userId do gestor/encarregado)
+
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  // Relações
+  funcionarios  ObraFuncionario[]
+  pontos        Ponto[]
+  escalas       Escala[]
+  producoes     RegistoProducao[]
+  movimentos    MovimentoMaterial[]
+  solicitacoes  SolicitacaoMaterial[]
+  ocorrencias   Ocorrencia[]
+  despesas      Despesa[]
+}
+
+// Many-to-Many: Funcionário ↔ Obra (com data de início/fim na obra)
+model ObraFuncionario {
+  id            String      @id @default(uuid())
+  obraId        String
+  obra          Obra        @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  funcionarioId String
+  funcionario   Funcionario @relation(fields: [funcionarioId], references: [id], onDelete: Cascade)
+  dataInicio    DateTime    @default(now())
+  dataFim       DateTime?
+  ativo         Boolean     @default(true)
+
+  @@unique([obraId, funcionarioId])
+}
+
+// ─── PONTO ELETRÓNICO ──────────────────────────────────────────────────────
+
+model Ponto {
+  id            String      @id @default(uuid())
+  funcionarioId String
+  funcionario   Funcionario @relation(fields: [funcionarioId], references: [id])
+  obraId        String
+  obra          Obra        @relation(fields: [obraId], references: [id])
+
+  tipo          PontoTipo
+  status        PontoStatus @default(PENDENTE)
+
+  // Localização no momento do ponto
+  latitude      Float?
+  longitude     Float?
+  distanciaObra Float?     // metros — calculado no backend
+
+  // Metadados do dispositivo
+  dispositivo   String?    // user-agent resumido
+  ipAddress     String?
+
+  // Offline sync
+  registadoOffline Boolean @default(false)
+  sincronizadoEm   DateTime?
+
+  // Timestamps
+  registadoEm   DateTime   // quando o funcionário carregou no botão
+  createdAt     DateTime   @default(now())
+
+  // Correção manual
+  corrigidoPor  String?    // userId do admin que corrigiu
+  notaAdmin     String?
+
+  @@index([funcionarioId, registadoEm])
+  @@index([obraId, registadoEm])
+}
+
+// ─── ESCALA ────────────────────────────────────────────────────────────────
+
+model Escala {
+  id            String       @id @default(uuid())
+  funcionarioId String
+  funcionario   Funcionario  @relation(fields: [funcionarioId], references: [id])
+  obraId        String
+  obra          Obra         @relation(fields: [obraId], references: [id])
+
+  data          DateTime     // dia da escala (só a data, ignorar hora)
+  horaEntrada   String       @default("08:00") // "08:00"
+  horaSaida     String       @default("17:00") // "17:00"
+  status        EscalaStatus @default(PLANEADA)
+  nota          String?
+
+  criadoPor     String?      // userId do admin/gestor
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@unique([funcionarioId, data, obraId])
+  @@index([data])
+  @@index([obraId, data])
+}
+
+// ─── PRODUÇÃO ──────────────────────────────────────────────────────────────
+
+model RegistoProducao {
+  id            String      @id @default(uuid())
+  funcionarioId String
+  funcionario   Funcionario @relation(fields: [funcionarioId], references: [id])
+  obraId        String
+  obra          Obra        @relation(fields: [obraId], references: [id])
+
+  data          DateTime
+  tipoProduto   String     // "Pladur", "Teto Falso", "Divisória", etc.
+  quantidade    Decimal    @db.Decimal(10, 2)
+  unidade       String     @default("m²") // "m²", "ml", "un"
+  nota          String?
+
+  registadoPor  String?    // userId — pode ser o encarregado
+  createdAt     DateTime   @default(now())
+
+  @@index([obraId, data])
+}
+
+// ─── MATERIAIS ─────────────────────────────────────────────────────────────
+
+model Material {
+  id          String  @id @default(uuid())
+  nome        String
+  unidade     String  @default("un") // "un", "kg", "m²", "ml", "cx"
+  descricao   String?
+  ativo       Boolean @default(true)
+
+  movimentos  MovimentoMaterial[]
+  solicitacoes SolicitacaoMaterial[]
+}
+
+model MovimentoMaterial {
+  id         String   @id @default(uuid())
+  obraId     String
+  obra       Obra     @relation(fields: [obraId], references: [id])
+  materialId String
+  material   Material @relation(fields: [materialId], references: [id])
+
+  tipo       String   // "ENTRADA" | "SAIDA" (consumo)
+  quantidade Decimal  @db.Decimal(10, 2)
+  nota       String?
+
+  registadoPor String?
+  createdAt    DateTime @default(now())
+
+  @@index([obraId])
+}
+
+model SolicitacaoMaterial {
+  id          String            @id @default(uuid())
+  obraId      String
+  obra        Obra              @relation(fields: [obraId], references: [id])
+  materialId  String
+  material    Material          @relation(fields: [materialId], references: [id])
+
+  quantidade  Decimal           @db.Decimal(10, 2)
+  nota        String?
+  status      SolicitacaoStatus @default(PENDENTE)
+  quantidadeAprovada Decimal?  @db.Decimal(10, 2)
+  notaAdmin   String?
+
+  solicitadoPor String?         // funcionarioId
+  aprovadoPor   String?         // userId do admin
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+// ─── OCORRÊNCIAS ───────────────────────────────────────────────────────────
+
+model Ocorrencia {
+  id          String              @id @default(uuid())
+  obraId      String
+  obra        Obra                @relation(fields: [obraId], references: [id])
+  categoria   OcorrenciaCategoria @default(OUTRO)
+  descricao   String
+  resolvida   Boolean             @default(false)
+  registadoPor String?
+  createdAt   DateTime            @default(now())
+}
+
+// ─── DESPESAS ──────────────────────────────────────────────────────────────
+
+model Despesa {
+  id          String   @id @default(uuid())
+  obraId      String
+  obra        Obra     @relation(fields: [obraId], references: [id])
+  tipo        String   // "Combustível", "Transporte", "Ferramentas", ...
+  valor       Decimal  @db.Decimal(10, 2)
+  descricao   String?
+  data        DateTime
+  aprovada    Boolean  @default(false)
+  aprovadaPor String?
+  registadaPor String?
+  createdAt   DateTime @default(now())
+}
