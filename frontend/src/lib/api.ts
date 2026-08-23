@@ -224,7 +224,7 @@ export const rhApi = {
 };
 
 export const calculadoraApi = {
-  calcular: (data: { especialidade: string; areaM2?: number; demasPintura?: number }) =>
+  calcular: (data: { especialidade: string; areaM2?: number; compM?: number; alturaM?: number; demasPintura?: number }) =>
     request<ResultadoCalculo>("/api/calculadora/calcular", {
       method: "POST",
       body: JSON.stringify(data),

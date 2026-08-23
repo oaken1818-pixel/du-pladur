@@ -21,12 +21,12 @@ router.post("/calcular", async (req, res) => {
     let resultado = {};
 
     switch (especialidade) {
-      // 🧱 PEDREIRO — ALVENARIA & TIJOLO
+      // 🧱 PEDREIRO — ALVENARIA & TIJOLO (Sacos de 25kg Padrão Europa)
       case "PEDREIRO": {
         // Tijolo padrão 19x19x9 cm (~25 tijolos/m²)
         const qtdTijolos = Math.ceil(area * 25 * 1.05); // +5% quebra
-        const sacosCimento = Math.ceil((area * 12) / 50); // 12kg/m² de argamassa
-        const m3Areia = Number(((area * 0.02)).toFixed(2));
+        const sacosCimento25kg = Math.ceil((area * 12) / 25); // Sacos de 25kg (Padrão Europa)
+        const m3Areia = Number((area * 0.02).toFixed(2));
 
         resultado = {
           especialidade: "PEDREIRO",
@@ -34,7 +34,7 @@ router.post("/calcular", async (req, res) => {
           areaM2: area,
           itens: [
             { material: "Tijolos Furados (19x19x9)", quantidade: qtdTijolos, unidade: "un", nota: "Inclui 5% de margem de quebra" },
-            { material: "Sacos de Cimento (50kg)", quantidade: sacosCimento, unidade: "sacos", nota: "Para traço 1:4 de argamassa" },
+            { material: "Sacos de Cimento (25kg)", quantidade: sacosCimento25kg, unidade: "sacos", nota: "Padrão Europa (25kg) para traço 1:4" },
             { material: "Areia Fina/Média", quantidade: m3Areia, unidade: "m³", nota: "Volume para assentamento" },
           ],
         };
@@ -76,7 +76,7 @@ router.post("/calcular", async (req, res) => {
           areaM2: area,
           itens: [
             { material: "Piso Cerâmico / Azulejo (m²)", quantidade: Number(areaComQuebra.toFixed(1)), unidade: "m²", nota: `~${caixasCeramica} caixas (+10% para cortes)` },
-            { material: "Cimento-Cola (Sacos 25kg)", quantidade: Math.ceil(kgCimentoCola / 25), unidade: "sacos", nota: `${kgCimentoCola} kg totais` },
+            { material: "Cimento-Cola (Sacos 25kg)", quantidade: Math.ceil(kgCimentoCola / 25), unidade: "sacos", nota: `${kgCimentoCola} kg totais (Sacos 25kg)` },
             { material: "Betume de Juntas (Kg)", quantidade: kgBetumeJuntas, unidade: "kg", nota: "Para juntas de 2mm a 3mm" },
             { material: "Cruzetas / Espaçadores", quantidade: Math.ceil(area * 30), unidade: "un", nota: "Espaçadores de nivelamento" },
           ],
@@ -84,11 +84,23 @@ router.post("/calcular", async (req, res) => {
         break;
       }
 
-      // 🛠️ PLAQUISTA — PLADUR & TETOS FALSOS
+      // 🛠️ PLAQUISTA — PLADUR & TETOS FALSOS (Separação Técnica de Montantes vs Raias)
       case "PLAQUISTA": {
-        const qtdPlacas = Math.ceil(area / 3.0); // Placa 1.20m x 2.50m = 3.0m²
-        const mlPerfis = Math.ceil(area * 3.2); // 3.2 metros de perfil por m²
-        const parafusos = Math.ceil(area * 28); // 28 parafusos/m²
+        const alt = Number(alturaM || 2.8);
+        const comp = Number(compM || area / alt);
+
+        // Montantes: Verticais a cada 60cm de eixo
+        const numMontantes = Math.ceil(comp / 0.60) + 1;
+        const mlMontantes = numMontantes * alt;
+        const varasMontantes3m = Math.ceil(mlMontantes / 3);
+
+        // Raias/Canais: Horizontais (Piso + Teto + Laterais)
+        const mlRaias = (comp * 2) + (alt * 2);
+        const varasRaias3m = Math.ceil((mlRaias * 1.05) / 3);
+
+        // Placas de Pladur 1.20m x 2.50m (3.0m²)
+        const qtdPlacas = Math.ceil(area / 3.0);
+        const parafusos = Math.ceil(area * 28);
         const kgMassaJuntas = Number((area * 0.8).toFixed(1));
 
         resultado = {
@@ -96,9 +108,10 @@ router.post("/calcular", async (req, res) => {
           titulo: "Pladur / Tetos Falsos & Divisórias",
           areaM2: area,
           itens: [
-            { material: "Placas de Pladur (1.20x2.50m)", quantidade: qtdPlacas, unidade: "placas", nota: `${(qtdPlacas * 3).toFixed(1)} m² totais` },
-            { material: "Perfis Montantes / Raias (3m)", quantidade: Math.ceil(mlPerfis / 3), unidade: "varas", nota: `${mlPerfis} metros lineares` },
-            { material: "Parafusos TTPC 25mm", quantidade: parafusos, unidade: "un", nota: "Para fixação das placas" },
+            { material: "Placas de Pladur (1.20x2.50m)", quantidade: qtdPlacas, unidade: "placas", nota: `${(qtdPlacas * 3).toFixed(1)} m² totais (com margem)` },
+            { material: "Montantes Verticais (Varas de 3m)", quantidade: varasMontantes3m, unidade: "varas", nota: `${Math.round(mlMontantes)}m lineares (Espaçamento 60cm entre eixos)` },
+            { material: "Raias Horizontais (Varas de 3m)", quantidade: varasRaias3m, unidade: "varas", nota: `${Math.round(mlRaias)}m lineares (Perímetro Piso + Teto + Laterais)` },
+            { material: "Parafusos TTPC 25mm", quantidade: parafusos, unidade: "un", nota: "Para fixação das placas no perfil" },
             { material: "Massa de Juntas (Kg)", quantidade: kgMassaJuntas, unidade: "kg", nota: "Para 3 demãos de barramento" },
             { material: "Fita de Juntas (150m)", quantidade: Math.ceil(area / 40), unidade: "rolos", nota: "Fita de papel microperfurada" },
           ],

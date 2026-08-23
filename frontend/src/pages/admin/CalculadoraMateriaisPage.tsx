@@ -35,6 +35,8 @@ export default function CalculadoraMateriaisPage() {
       const res = await calculadoraApi.calcular({
         especialidade,
         areaM2: area,
+        compM: comprimentoM,
+        alturaM: alturaM,
         demasPintura: demaos,
       });
       setResultado(res);
